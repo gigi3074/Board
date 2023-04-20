@@ -1,0 +1,108 @@
+회원 테이블 만들기
+CREATE TABLE members(
+    `MEMBER_NO`        INT            NOT NULL    AUTO_INCREMENT COMMENT '회원번호', 
+    `MEMBER_ID`        VARCHAR(45)    NOT NULL    COMMENT '회원아이디', 
+    `MEMBER_NICKNAME`  VARCHAR(45)    NOT NULL    COMMENT '회원닉네임', 
+    `MEMBER_PW`        VARCHAR(45)    NOT NULL    COMMENT '비밀번호', 
+    `GREAD`            VARCHAR(45)    NOT NULL    DEFAULT 'JUNIOR' COMMENT '회원등급. 초급 JUNIOR,  중급 MIDDLE,  상급  SENIOR', 
+    `EMAIL`            VARCHAR(45)    NULL        COMMENT '회원이메일', 
+    CONSTRAINT board PRIMARY KEY (MEMBER_NO)
+);
+
+테스트용 데이터 입력
+INSERT INTO members (MEMBER_ID, MEMBER_NICKNAME, MEMBER_PW, GREAD, EMAIL) VALUES ('Test01', '', '1234', 'JUNIOR', 'abcd@naver.com');
+
+
+보드 테이블 만들기
+CREATE TABLE board(
+    `BOARD_NO`   BIGINT           NOT NULL    AUTO_INCREMENT COMMENT '게시판번호', 
+    `BO_TITLE`   VARCHAR(150)     NULL        COMMENT '글제목', 
+    `BO_POST`    VARCHAR(1000)    NULL        COMMENT '글내용', 
+    `BO_PW`      VARCHAR(20)      NULL        COMMENT '글비번', 
+    `BO_DATE`    datetime         NULL        DEFAULT current_timestamp COMMENT '작성일', 
+    `BO_COUNT`   INT              NULL        DEFAULT 0 COMMENT '조회수', 
+    `BO_IP`      VARCHAR(45)      NULL        COMMENT '작성자IP', 
+    `MEMBER_NO`  INT              NULL        COMMENT '회원번호', 
+     PRIMARY KEY (BOARD_NO)
+);
+
+FK설정 
+ALTER TABLE board
+    ADD CONSTRAINT FK_board_MEMBER_NO_members_MEMBER_NO FOREIGN KEY (MEMBER_NO)
+        REFERENCES members (MEMBER_NO) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+테스트용 데이터 입력
+INSERT INTO board (BO_TITLE, BO_POST, BO_PW, BO_DATE, BO_COUNT, BO_IP, MEMBER_NO) VALUES ('제목입니다!!', '내용입니다!아무내용이나써보자!', '1234', NOW(), 0, '123.455.677.543', 2);
+
+
+게시판 좋아요 테이블
+CREATE TABLE like_board
+(
+    `LIKE_NO`    BIGINT    NOT NULL    AUTO_INCREMENT COMMENT '좋아요', 
+    `BOARD_NO`   BIGINT    NULL        COMMENT '게시판번호', 
+    `MEMBER_NO`  INT       NULL        COMMENT '회원번호', 
+     PRIMARY KEY (LIKE_NO)
+);
+
+FK설정 
+ALTER TABLE like_board
+    ADD CONSTRAINT FK_like_board_MEMBER_NO_members_MEMBER_NO FOREIGN KEY (MEMBER_NO)
+        REFERENCES members (MEMBER_NO) ON DELETE RESTRICT ON UPDATE RESTRICT;
+ALTER TABLE like_board
+    ADD CONSTRAINT FK_like_board_BOARD_NO_board_BOARD_NO FOREIGN KEY (BOARD_NO)
+        REFERENCES board (BOARD_NO) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+테스트용 데이터 입력
+INSERT INTO like_board (BOARD_NO, MEMBER_NO) VALUES (1, 2);
+
+
+댓글 테이블 만들기
+CREATE TABLE comments
+(
+    `COMMENT_ID`       INT             NOT NULL    AUTO_INCREMENT COMMENT '댓글번호', 
+    `BOARD_NO`         BIGINT          NULL        COMMENT '게시판번호', 
+    `COMMENT_CONTENT`  VARCHAR(150)    NOT NULL    COMMENT '댓글내용', 
+    `COMMENT_DATE`     DATETIME        NULL        DEFAULT current_timestamp COMMENT '댓글작성일', 
+    `LIKE_COUNT`       INT             NULL        DEFAULT 0 COMMENT '좋아요', 
+    `MEMBER_NO`        INT             NULL        COMMENT '회원번호', 
+     PRIMARY KEY (COMMENT_ID)
+);
+
+FK설정 
+ALTER TABLE comments
+    ADD CONSTRAINT FK_comments_MEMBER_NO_members_MEMBER_NO FOREIGN KEY (MEMBER_NO)
+        REFERENCES members (MEMBER_NO) ON DELETE RESTRICT ON UPDATE RESTRICT;
+ALTER TABLE comments
+    ADD CONSTRAINT FK_comments_BOARD_NO_board_BOARD_NO FOREIGN KEY (BOARD_NO)
+        REFERENCES board (BOARD_NO) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+테스트용 데이터 입력
+INSERT INTO comments (BOARD_NO, COMMENT_CONTENT, COMMENT_DATE, LIKE_COUNT, MEMBER_NO) VALUES (1, '댓글입니다 1', NOW(), 0, 2);
+
+
+대댓글 테이블 만들기
+CREATE TABLE replies
+(
+    `REPLIE_NO`   INT             NOT NULL    AUTO_INCREMENT COMMENT '대댓글번호', 
+    `RE_CONTENT`  VARCHAR(150)    NOT NULL    COMMENT '대댓글내용', 
+    `RE_DATE`     DATETIME       NULL        DEFAULT current_timestamp COMMENT '대댓글작성일', 
+    `RE_LIKE`     INT             NULL        DEFAULT 0 COMMENT '좋아요', 
+    `MEMBER_NO`   INT             NULL        COMMENT '회원번호', 
+    `COMMENT_ID`  INT             NULL        COMMENT '댓글번호', 
+    `BOARD_NO`    BIGINT          NULL        COMMENT '게시판번호', 
+     PRIMARY KEY (REPLIE_NO)
+);
+
+FK설정 
+ALTER TABLE replies
+    ADD CONSTRAINT FK_replies_MEMBER_NO_members_MEMBER_NO FOREIGN KEY (MEMBER_NO)
+        REFERENCES members (MEMBER_NO) ON DELETE RESTRICT ON UPDATE RESTRICT;
+ALTER TABLE replies
+    ADD CONSTRAINT FK_replies_COMMENT_ID_comments_COMMENT_ID FOREIGN KEY (COMMENT_ID)
+        REFERENCES comments (COMMENT_ID) ON DELETE RESTRICT ON UPDATE RESTRICT;
+ALTER TABLE replies
+    ADD CONSTRAINT FK_replies_BOARD_NO_board_BOARD_NO FOREIGN KEY (BOARD_NO)
+        REFERENCES board (BOARD_NO) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+테스트용 데이터 입력
+INSERT INTO replies (RE_CONTENT, RE_DATE, RE_LIKE, MEMBER_NO, COMMENT_ID, BOARD_NO) VALUES ('대댓글입니다 1', NOW(), 0, 2, 1, 1);
